@@ -57,7 +57,10 @@ class TCA9548A_Channel:
 
     def try_lock(self) -> bool:
         """Pass through for try_lock."""
+        start_time = time.monotonic()
         while not self.tca.i2c.try_lock():
+            if time.monotonic() - start_time > 0.5:  # Timeout after 1 second
+                raise TimeoutError("Unable to lock I2C bus within timeout period.")
             time.sleep(0)
         self.tca.i2c.writeto(self.tca.address, self.channel_switch)
         return True
